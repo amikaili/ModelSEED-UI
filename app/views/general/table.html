@@ -30,28 +30,11 @@
             </tr>
         </thead>
 
-        <tr ng-repeat="item in (filtered = ( data | filter: opts.query | orderBy : opts.sort.field : opts.sort.desc)
+        <tr ng-repeat="row in (filtered = ( data | filter: opts.query | orderBy : opts.sort.field : opts.sort.desc)
                         | limitTo : opts.limit : opts.offset)">
             <td ng-repeat="h in header">
-
-                <span ng-if="h.hasOwnProperty('newTab')">
-                    <a ng-click="h.call($event, item[h.key])">{{::item[h.key].split('_')[0]}}[{{::item[h.key].split('_')[1]}}]</a>
-                </span>
-
-                <span ng-if="h.hasOwnProperty('formatter')"
-                      ng-bind-html="h.formatter(item[h.key])"></span>
-
-                <span ng-if="h.hasOwnProperty('newTabList')">
-                    <span ng-repeat="x in item[h.key]">
-                        <a ng-click="h.call($event, x)">{{x.split('_')[0]}}[{{::x.split('_')[1]}}]</a>
-                        <span ng-if="$index < item[h.key].length-1">,</span>
-                    </span>
-                </span>
-
-                <span ng-if="!h.hasOwnProperty('newTab') && !h.hasOwnProperty('formatter') && !h.hasOwnProperty('newTabList') ">
-                    {{::item[h.key]}}
-                </span>
-
+                <span ng-if="h.format" bind-html-compile="h.format(row)"></span>
+                <span ng-if="!h.format">{{row[h.key] || row[h.key] == 0 ? row[h.key] : '-'}}</span>
             </td>
         </tr>
     </table>

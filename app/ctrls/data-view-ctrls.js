@@ -459,14 +459,18 @@ function($scope, $state, $sParams, Auth, MS, WS, Biochem, $dialog,
 
     // reaction table spec
     $scope.rxnHeader = [
-        {label: 'ID', key: 'id', newTab: 'rxn',
-            call: function(e, item) {
-                $scope.toggleView(e, 'rxn', item );
-            }},
-         {label: 'Name', key: 'name'},
-         {label: 'EQ', key: 'eq'},
-         {label: 'Genes', key: 'genes',
-             formatter: function(item) {
+        {label: 'ID', key: 'id',
+            format: function(row) {
+                console.log('row', row)
+                return '<span class="nowrap"><a ui-sref="app.rxn({id: \''+row.id+'\'})">'
+                        +row.id+'</a>['+row.compartment+']</span>';
+            }
+        },
+        {label: 'Name', key: 'name'},
+        {label: 'EQ', key: 'eq'},
+        {label: 'Genes', key: 'genes',
+             format: function(row) {
+                 var item = row.genes;
                  if (!item.length) return '-';
 
                  var links = [];
@@ -499,10 +503,18 @@ function($scope, $state, $sParams, Auth, MS, WS, Biochem, $dialog,
 
     $scope.geneHeader = [
         {label: 'Gene', key: 'id'},
-        {label: 'Reactions', key: 'reactions', newTabList: true,
-        call: function(e, item) {
-          $scope.toggleView(e, 'rxn', item );
-        }
+        {label: 'Reactions', key: 'reactions',
+            format: function(row) {
+                console.log('row!' , row)
+                var rxns = row.reactions,
+                    links = [];
+                for (var i=0; i<rxns.length; i++) {
+                    var rxn = rxns[i];
+                    links.push('<a ng-click="toggleView(e, '+rxn+', item )"'
+                            +row.id+'</a>['+row.compartment+']')
+                }
+                return links.join(', ')
+            }
         }
     ];
 
@@ -542,6 +554,7 @@ function($scope, $state, $sParams, Auth, MS, WS, Biochem, $dialog,
     }
 
     // fetch object data and parse it.
+    /*
     $scope.loading = true;
     WS.get(modelPath).then(function(res) {
         $scope.meta = res.meta;
@@ -556,19 +569,21 @@ function($scope, $state, $sParams, Auth, MS, WS, Biochem, $dialog,
         $scope.error = e;
         $scope.loading = false;
     })
+    */
 
 
-    /* testing
-    MS.getModel(path).then(function(res) {
+
+    $scope.loading = true;
+    console.log('fetching')
+    MS.getModel(modelPath).then(function(res) {
         console.log('res',res)
         $scope.data = res.data;
+        setFeatureUrl(res.meta.autoMeta.source);
 
         $scope.loading = false;
-        var end = performance.now();
-        var duration = end - start;
-        console.log('time:', duration)
+
     })
-    */
+
 
     $scope.loadingMaps = true;
     MV.getMaps()

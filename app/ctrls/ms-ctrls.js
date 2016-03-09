@@ -177,6 +177,7 @@ function($s, $document, uiTools, Jobs, $timeout) {
 .controller('JobCount',
 ['$scope', 'Jobs',
 function($s, Jobs) {
+    
     if (Jobs.getStatus().allJobs !== null) {
         var status = Jobs.getStatus();
         $s.remainingJobCount = status.queuedCount + status.runningCount;

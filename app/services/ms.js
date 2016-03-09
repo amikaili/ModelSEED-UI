@@ -333,17 +333,18 @@ function($http, $log, $cacheFactory, $q, MV, WS, config, Auth) {
         self.myModels.splice(0, 0, data);
     }
 
-    var endpoint = config.services.ms_rest_url+'model';
-    //var endpoint = 'http://0.0.0.0:3000/v0/'+'model';
+    var endpoint = config.services.ms_rest_url+'/model';
     var headers =  {
-        headers: {
-            Authentication: Auth.token
+        headers : {
+            authorization: Auth.token
         }
     }
 
-    //console.log('header', headers)
+    console.log('header', headers)
     this.getModel = function(path) {
+        console.log('getting', path)
         return $http.get(endpoint+path, headers).then(function(res) {
+            console.log('res',res)
             return res.data;
         })
     }

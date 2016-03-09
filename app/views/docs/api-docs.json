@@ -223,14 +223,14 @@
                     "type": "Model Object",
                     "name": "A",
                     "optional": false,
-                    "description": "parsed and sanitized model object",
+                    "description": "parsed and sanitized model object.  Great for model tables.",
                     "line": 6,
-                    "source": "@apiSuccess {Model Object} A parsed and sanitized model object"
+                    "source": "@apiSuccess {Model Object} A parsed and sanitized model object.  Great for model tables."
                 }
             ],
             "line": 0,
             "description": "",
-            "source": "@api {get} /model/:path Request model detail information\n@apiName getModel\n\n@apiParam {string} path Path to workspace object\n\n@apiSuccess {Model Object} A parsed and sanitized model object"
+            "source": "@api {get} /model/:path Request model detail information\n@apiName getModel\n\n@apiParam {string} path Path to workspace object\n\n@apiSuccess {Model Object} A parsed and sanitized model object.  Great for model tables."
         }
     ],
     [
