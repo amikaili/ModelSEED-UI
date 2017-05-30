@@ -1,5 +1,5 @@
 
-angular.module('DataViewCtrls', [])
+angular.module('DataViewCtrls', ["ngDraggable"])
 .controller('Json',
 ['$scope', '$stateParams', 'WS',
 function($s, $sParams, WS) {
@@ -138,20 +138,176 @@ function($scope, $sParams, WS, $http) {
 
 <!-- TODO Build New Model -->
 .controller('BuildPlant',
-['$scope', '$stateParams', 'WS', '$http',
-function($scope, $sParams, WS, $http) {
+['$scope', '$stateParams', 'MS', 'WS', 'Dialogs', 'Auth', '$http', 'ngDraggable',
+function($scope, $sParams, MS, WS, Dialogs, Auth, $http, ngDraggable) {
 
     // path and name of object
     var path = $sParams.path;
     
+    $scope.myPlants = [];
+    $scope.myMedia = [];
+    
+    // the selected item for the build operations
+    $scope.selected = null;
+    
+    $scope.copyInProgress = {};
+        
+    
+        $scope.loadingPlants = true;
+        MS.listModels('/'+Auth.user+'/plantseed').
+
+            then(function(res) {
+                console.log('path res', res)
+            
+                $scope.myPlants = res;
+            
+                $scope.loadingPlants = false;
+        }).catch(function(e) {
+                $scope.myPlants = [];
+                $scope.loadingPlants = false;
+        })
+        
+    $scope.loadingMyMedia = true;    
+    MS.listMyMedia()
+      .then(function(media) {
+          $scope.myMedia = media;
+          $scope.loadingMyMedia = false;
+      }).catch(function(e) {
+          $scope.loadingMyMedia = false;
+          $scope.myMedia = [];
+      })
+        
+            
+        $scope.centerAnchor = true;
+        $scope.toggleCenterAnchor = function () {$scope.centerAnchor = !$scope.centerAnchor}
+        // $scope.draggableObjects1 = [{name:'genome1'}, {name:'genome2'}, {name:'genome3'}];
+        // $scope.draggableObjects2 = [{name:'media1'}, {name:'media2'}, {name:'media3'}];
+        $scope.droppedObjects1 = [];
+        $scope.droppedObjects2= [];
+        $scope.onDropComplete1=function(data,evt){
+            var index = $scope.droppedObjects1.indexOf(data);
+            if (index == -1)
+            $scope.droppedObjects1.push(data);
+        }
+        $scope.onDragSuccess1=function(data,evt){
+            console.log("133","$scope","onDragSuccess1", "", evt);
+            var index = $scope.droppedObjects1.indexOf(data);
+            if (index > -1) {
+                $scope.droppedObjects1.splice(index, 1);
+            }
+        }
+        $scope.onDragSuccess2=function(data,evt){
+            var index = $scope.droppedObjects2.indexOf(data);
+            if (index > -1) {
+                $scope.droppedObjects2.splice(index, 1);
+            }
+        }
+        $scope.onDropComplete2=function(data,evt){
+            var index = $scope.droppedObjects2.indexOf(data);
+            if (index == -1) {
+                $scope.droppedObjects2.push(data);
+            }
+        }
+        var inArray = function(array, obj) {
+            var index = array.indexOf(obj);
+        }
+
+    
+    
     $scope.submit = function() {
     
-        console.log( "TODO Build New Model for \n", $scope.name );
+        // TODO: Should I call copy from here (html is also calling it)!!!  
+    
+    
+        console.log( "TODO Build New Model... \n" );
+        
+        // ngDraggable.ngCancelDrag();
     };
     
     // $scope.image = $sParams.image;
     
     // $scope.name = path.split('/').pop();
+    
+    
+    
+    $scope.copy = function(i, path) {
+        $scope.copyInProgress[i] = true;
+        
+        
+        // TODO: Fix this path:
+        var name = "";
+        // var name =  path.split('/').pop(), destPath = '/'+Auth.user+'/plantseed/'+name;    
+
+        Dialogs.showToast('Copying...', name, 2000);            
+        
+        // TODO... 
+        // copyModel(name, path, i);
+
+    };    
+
+
+
+    function copyModel(name, path, i) {
+        var prom = WS.getObjectMeta('/'+Auth.user+'/plantseed/'+name)
+            .then(function(res) {
+                Dialogs.showToast('Copy canceled: <i>'+name+'</i> already exists', null, 2000);  
+                $scope.copyInProgress[i] = false;                 
+            }).catch(function(e) {
+                $http.rpc('ms', 'copy_model', {
+                    source_model_path: path,
+                    plantseed: 1
+                }).then(function(res) {
+                    Dialogs.showComplete('Copy complete', name);
+                    
+                    // go ahead and reload genomes and models
+                    loadPrivatePlants();     
+                    MS.listModels('/'+Auth.user+'/plantseed')                         
+
+                    $scope.copyInProgress[i] = false;
+                }).catch(function(e) {
+                    Dialogs.showError('Copy '+name+ ' failed.')    
+                    $scope.copyInProgress[i] = false;
+                })                
+            })
+
+        return prom;
+
+    }
+
+    function copyFolder(name, path, destPath) {                       
+        var args = {
+            src: path,
+            dest: destPath,
+            recursive: true,
+        }
+
+        // first create modelfolder, then copy
+        var prom = WS.createModelFolder('/'+Auth.user+'/plantseed/'+name)
+            .then(function(res) {
+                return WS.copy(args).then(function(res) {
+                    Dialogs.showComplete('Copy complete', name, path);
+
+                    // remove odd empty object
+                    delete res[path];
+
+                    // update cache
+                    if (MS.myPlants) MS.addModel(res, 'plant');
+                }).catch(function(e) {
+                    // hack: if error is thrown, assume 
+                    // it's because folder already exists.
+                    Dialogs.saveAs('', function(newName) {
+                        var destPath = '/'+Auth.user+'/plantseed/'+newName;  
+                        copyFolder(newName, path, destPath) 
+                    }, function() {
+                        Dialogs.showToast('Copy Canceled', null, 100);      
+                    }, name + ' already exists.  Please choose a new name.')
+                })
+            }).catch(function(e) {
+                Dialogs.showError('Copy '+name+ ' failed.')           
+            })    
+        
+        return prom;
+    }    
 
     } ] )
 
