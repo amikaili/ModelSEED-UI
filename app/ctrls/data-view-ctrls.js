@@ -1195,7 +1195,7 @@ function($scope, $state, $sParams, Auth, MS, WS, Biochem, $mdDialog, Dialogs, Ge
     
     
 
-    // MODELSEED-68: Make display of gapfilling data orthogonal as well!
+    // MODELSEED-68:
     // Gapfill selection for data viewing (enables determine which GF is selected via radios)
     $scope.setSelectedGapfilling = function(e, gf, model) {
         // e.preventDefault();
@@ -1519,14 +1519,14 @@ function($scope, $state, $sParams, Auth, MS, WS, Biochem, $mdDialog, Dialogs, Ge
                 return fbas.join('<br>');
             }
 
-        }        
-        /* 
+        },        
         {label: 'Gapfill', key: 'gapfill',
             formatter: function(item) {
-                return item.summary || '-';
+                // return item.summary || '-';
+                return '-';
+
             }
-        }
-        */ 
+        } 
         ];
 
     $scope.cpdHeader = [{
